@@ -1,0 +1,75 @@
+/* Catálogo — reaproveitado da versão React anterior (iara-games-catalogo-react),
+   construído sobre .category-chip, .catalog-toolbar e .game-card do styles.css original. */
+
+.catalog-hero {
+  padding: 64px 0 40px;
+  background:
+    linear-gradient(0deg, var(--bg), transparent 45%),
+    linear-gradient(90deg, rgba(0, 0, 0, .82) 0%, rgba(0, 0, 0, .5) 50%, rgba(0, 0, 0, .25)),
+    url('../assets/images/banner-floresta.png') center / cover;
+}
+.catalog-hero h1 { font-size: 34px; font-weight: 600; margin: 0; }
+.catalog-hero p { margin: 8px 0 0; color: #e1e5e3; font-size: 16px; }
+
+.catalog-page { padding-top: 24px; }
+.catalog-search { width: min(480px, 100%); margin-bottom: 20px; }
+
+/* Barra de status */
+.catalog-browser .catalog-toolbar {
+  height: auto; min-height: 52px; padding: 0 2px; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  color: #8f9894; font-size: 13px;
+}
+.catalog-browser .catalog-toolbar b { color: #fff; margin: 0; }
+.toolbar-tag { color: #fff; }
+.toolbar-actions { display: flex; align-items: center; gap: 14px; }
+.favorites-toggle { gap: 8px; font-size: 13px; }
+.favorites-count {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
+  background: linear-gradient(90deg, #ef5c35, #18862f);
+  display: inline-grid; place-items: center; font-size: 12px; font-weight: 600;
+}
+.favorites-toggle.is-added .favorites-count { background: rgba(0, 0, 0, .35); }
+.category-chip { cursor: pointer; }
+.category-chip:hover:not(.active) { background: #22302a; }
+
+/* Grade de cards */
+.game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+
+.game-card { display: flex; flex-direction: column; transition: border-color .15s ease, transform .15s ease; }
+.game-card:hover { border-color: #3c4842; }
+.game-card.is-favorite { border-color: #147b2d; }
+.game-media > img { display: block; }
+.tags { flex-wrap: wrap; }
+.game-body { display: flex; flex-direction: column; flex: 1; }
+.game-studio { color: #8f9894; margin-top: -4px; }
+.game-tagline { margin: 8px 0 0; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #c9cfcc; }
+.game-body > .game-price { display: flex; align-items: center; justify-content: flex-start; gap: 7px; margin-top: auto; padding-top: 12px; }
+.game-price .discount { background: #12852e; border-radius: 5px; padding: 2px 5px; font-size: 10px; }
+.game-price del { color: #727a76; font-size: 12px; }
+.game-price strong { margin-left: auto; }
+
+.game-body > .game-actions { display: flex; gap: 8px; align-items: stretch; }
+.game-actions .card-button { flex: 1; width: auto; min-width: 0; }
+.favorite-button { width: 36px; min-width: 36px; padding: 0; margin-top: 12px; }
+.favorite-button img { width: 16px; filter: brightness(0) invert(1); }
+.favorite-button.is-added, .card-button.is-added { background: #147b2d; border-color: #147b2d; }
+
+/* Estado vazio */
+.catalog-empty {
+  padding: 40px 20px; text-align: center; color: #9da5a1;
+  border: 1px solid #25302c; border-radius: 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.catalog-empty p { margin: 0; }
+.catalog-more { margin: 18px 0 0; text-align: right; }
+.catalog-more a { color: #fff; font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+
+@media (max-width: 768px) {
+  .catalog-hero { padding: 40px 0 32px; }
+  .catalog-hero h1 { font-size: 26px; }
+  .catalog-hero p { font-size: 14px; }
+}
+@media (max-width: 520px) {
+  .game-grid { grid-template-columns: 1fr; }
+}
