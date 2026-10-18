@@ -12,6 +12,9 @@ import bannerTupi from '../assets/images/banner-tupi.png';
 import logoCururu from '../assets/images/jogo-cururu.svg';
 import logoDandara from '../assets/images/jogo-dandara.svg';
 import logoEntreEstrelas from '../assets/images/jogo-entreasestrelas.svg';
+import videoCururu from '../../trailer-cururu.mp4';
+import videoDandara from '../../trailer-dandara.mp4';
+import videoEntreEstrelas from '../../trailer-entreestrelas.mp4';
 
 // Jogos do catálogo
 export const games = [
@@ -108,11 +111,11 @@ export const continuePlaying = [
   { id: 'c-tupi', name: 'Tupi', alt: 'Tupi: The Legend of Arariboia', studio: 'Mito Games', image: cardTupi, progress: 30, extra: true },
 ];
 
-// Destaques do hero (vídeos ficam em /public/videos)
+// Destaques do hero (vídeos na raiz do repositório, importados pelo Vite)
 export const heroSlides = [
   {
     id: 'entre-as-estrelas',
-    video: '/videos/trailer-entreestrelas.mp4',
+    video: videoEntreEstrelas,
     logo: logoEntreEstrelas,
     name: 'Entre as Estrelas',
     description:
@@ -121,7 +124,7 @@ export const heroSlides = [
   },
   {
     id: 'dandara',
-    video: '/videos/trailer-dandara.mp4',
+    video: videoDandara,
     logo: logoDandara,
     name: 'Dandara',
     description:
@@ -130,7 +133,7 @@ export const heroSlides = [
   },
   {
     id: 'cururu',
-    video: '/videos/trailer-cururu.mp4',
+    video: videoCururu,
     logo: logoCururu,
     name: 'Cururu — Whispers of the Forest',
     description:
