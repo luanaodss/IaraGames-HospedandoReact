@@ -4,8 +4,8 @@ Projeto acadêmico da disciplina **Design de Interação**.
 
 | | |
 |---|---|
-| **Repositório** | ⚠️ _Pendente: será preenchido após a publicação no GitHub_ |
-| **Aplicação publicada** | ⚠️ _Pendente: será preenchido após o deploy na Vercel_ |
+| **Repositório** | <https://github.com/luanaodss/IaraGames-HospedandoReact> |
+| **Aplicação publicada** | <https://iara-games-hospedando-react.vercel.app/> |
 
 ## Contexto
 
@@ -83,15 +83,14 @@ O relatório completo da auditoria de código e acessibilidade está em [`AUDITO
 ## Organização do projeto
 
 ```text
-iara-games-react/
+IaraGames-HospedandoReact/
 ├── index.html               # Página base carregada pelo Vite
 ├── package.json             # Dependências e scripts
 ├── vite.config.js           # Configuração do Vite
 ├── vercel.json              # Faz as rotas funcionarem na Vercel
 ├── AUDITORIA.md             # Relatório da auditoria técnica
-├── public/
-│   ├── favicon.svg
-│   └── videos/              # Trailers do destaque da Home
+├── favicon.svg              # Ícone da aba
+├── trailer-*.mp4            # Trailers do destaque da Home (importados em src/data/games.js)
 └── src/
     ├── main.jsx             # Ponto de entrada: router, contexto global e estilos
     ├── App.jsx              # Definição das rotas
@@ -163,11 +162,8 @@ O arquivo `vercel.json` redireciona todas as rotas para o `index.html`. Assim, e
 
 ## Integrantes
 
-> ⚠️ **Preencher com os nomes reais do grupo, em ordem alfabética.**
-
-- _Nome do integrante 1_
-- _Nome do integrante 2_
-- _Nome do integrante 3_
+- Beatriz Fonseca — RM572180
+- Luana Oliveira — RM571273
 
 ## Observações e limitações
 
