@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel
+.env
+.env.*
+.DS_Store
+Thumbs.db
+*.log
+vite.config.js.timestamp-*
