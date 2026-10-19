@@ -1,29 +1,65 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { readJSON, writeJSON, removeKey } from '../data/storage.js';
+import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
-// Estado global demonstrativo (sem backend): sessão, favoritos, carrinho e notificações.
-// Equivale ao que o script.js original fazia com localStorage e manipulação do DOM.
+// Estado global: sessão real do Supabase Auth, perfil do usuário (tabela profiles),
+// favoritos, carrinho demonstrativo e notificações.
 const AppContext = createContext(null);
 
-const AUTH_KEY = 'iaraAuth';
 const FAVORITES_KEY = 'iaraFavorites';
 const CART_KEY = 'iaraCart';
-
-const DEMO_USER = { name: 'Ana Beatriz', initial: 'A' };
-
-function loadAuth() {
-  return readJSON(AUTH_KEY, null) || readJSON(AUTH_KEY, null, 'session') || 'guest';
-}
+const LEGACY_AUTH_KEY = 'iaraAuth'; // login demonstrativo da versão anterior
 
 export function AppProvider({ children }) {
-  const [auth, setAuth] = useState(loadAuth);
+  const [session, setSession] = useState(null);
+  const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
+  const [profile, setProfile] = useState(null);
   const [favorites, setFavorites] = useState(() => readJSON(FAVORITES_KEY, []));
   const [cart, setCart] = useState(() => readJSON(CART_KEY, []));
   const [toast, setToast] = useState(null);
   const toastTimer = useRef();
   const toastCount = useRef(0);
 
-  const isLogged = auth === 'logged';
+  const authUser = session?.user ?? null;
+  const isLogged = Boolean(authUser);
+
+  // A sessão demonstrativa antiga não vale mais: só o Supabase decide quem está logado.
+  useEffect(() => removeKey(LEGACY_AUTH_KEY), []);
+
+  // Sessão: leitura inicial + escuta de mudanças (login, logout, renovação do token).
+  useEffect(() => {
+    if (!supabase) return undefined;
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      setAuthReady(true);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthReady(true);
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const loadProfile = useCallback(async (userId) => {
+    if (!supabase || !userId) return { data: null, error: null };
+    const result = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    if (!result.error) setProfile(result.data);
+    return result;
+  }, []);
+
+  // Perfil do usuário logado (protegido por RLS: só o próprio usuário consegue ler).
+  useEffect(() => {
+    if (!authUser) {
+      setProfile(null);
+      return;
+    }
+    loadProfile(authUser.id);
+  }, [authUser, loadProfile]);
 
   useEffect(() => writeJSON(FAVORITES_KEY, favorites), [favorites]);
   useEffect(() => writeJSON(CART_KEY, cart), [cart]);
@@ -36,17 +72,40 @@ export function AppProvider({ children }) {
     toastTimer.current = setTimeout(() => setToast(null), 3000);
   }, []);
 
-  // "Lembrar-me" marcado: sessão fica salva no navegador; desmarcado: só até fechar a aba.
-  const login = useCallback((remember) => {
-    removeKey(AUTH_KEY);
-    writeJSON(AUTH_KEY, 'logged', remember ? 'local' : 'session');
-    setAuth('logged');
+  const login = useCallback(async (email, password) => {
+    if (!supabase) return { error: { message: 'not-configured' } };
+    return supabase.auth.signInWithPassword({ email, password });
   }, []);
 
-  const logout = useCallback(() => {
-    removeKey(AUTH_KEY);
-    setAuth('guest');
+  const signUp = useCallback(async ({ email, password, metadata }) => {
+    if (!supabase) return { data: null, error: { message: 'not-configured' } };
+    return supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata,
+        emailRedirectTo: `${window.location.origin}/login?confirmado=1`,
+      },
+    });
   }, []);
+
+  const logout = useCallback(async () => {
+    if (!supabase) return { error: null };
+    const result = await supabase.auth.signOut();
+    setProfile(null);
+    return result;
+  }, []);
+
+  const user = useMemo(() => {
+    if (!authUser) return null;
+    const name = profile?.full_name || authUser.user_metadata?.full_name || authUser.email;
+    return {
+      id: authUser.id,
+      email: authUser.email,
+      name,
+      initial: (name || '?').trim().charAt(0).toUpperCase(),
+    };
+  }, [authUser, profile]);
 
   const toggleFavorite = useCallback(
     (id, name) => {
@@ -79,9 +138,14 @@ export function AppProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      authConfigured: isSupabaseConfigured,
+      authReady,
       isLogged,
-      user: isLogged ? DEMO_USER : null,
+      user,
+      profile,
+      loadProfile,
       login,
+      signUp,
       logout,
       favorites,
       toggleFavorite,
@@ -90,7 +154,7 @@ export function AppProvider({ children }) {
       toast,
       showToast,
     }),
-    [isLogged, login, logout, favorites, toggleFavorite, cart, addToCart, toast, showToast]
+    [authReady, isLogged, user, profile, loadProfile, login, signUp, logout, favorites, toggleFavorite, cart, addToCart, toast, showToast]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

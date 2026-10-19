@@ -7,6 +7,9 @@ import CatalogPage from './pages/CatalogPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SupportPage from './pages/SupportPage.jsx';
 import ConstructionPage from './pages/ConstructionPage.jsx';
+import SignupPage from './pages/SignupPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import RequireAuth from './components/RequireAuth.jsx';
 
 export default function App() {
   return (
@@ -20,17 +23,27 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="catalogo" element={<CatalogPage />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="cadastro" element={<SignupPage />} />
           <Route path="suporte" element={<SupportPage />} />
+          {/* Área logada: exige sessão válida no Supabase Auth */}
+          <Route
+            path="perfil"
+            element={
+              <RequireAuth>
+                <ProfilePage />
+              </RequireAuth>
+            }
+          />
         </Route>
 
         {/* Páginas que no original eram apenas "Em construção" (tela isolada, sem header/rodapé) */}
         <Route
           path="biblioteca"
-          element={<ConstructionPage title="Biblioteca" text="Sua biblioteca está sendo preparada." />}
-        />
-        <Route
-          path="perfil"
-          element={<ConstructionPage title="Meu perfil" text="A área de perfil está sendo preparada." />}
+          element={
+            <RequireAuth>
+              <ConstructionPage title="Biblioteca" text="Sua biblioteca está sendo preparada." />
+            </RequireAuth>
+          }
         />
         <Route
           path="forum"

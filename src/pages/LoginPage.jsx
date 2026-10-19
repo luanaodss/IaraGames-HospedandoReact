@@ -1,30 +1,68 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import bannerLogin from '../assets/images/banner-login.png';
 import grafismo from '../assets/images/grafismo.svg';
 import { useApp } from '../context/AppContext.jsx';
+import { authErrorMessage } from '../data/authErrors.js';
+import FormAlert from '../components/FormAlert.jsx';
 import usePageTitle from '../hooks/usePageTitle.js';
 
-// Login demonstrativo (login-page.html): não há backend nem validação de senha.
-// Qualquer e-mail válido e senha preenchida iniciam a sessão de exemplo.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Login com Supabase Auth (e-mail e senha). As credenciais são validadas no servidor;
+// a sessão é mantida pelo SDK do Supabase.
 export default function LoginPage() {
-  const { login, showToast } = useApp();
+  const { login, showToast, isLogged, authReady, authConfigured } = useApp();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', senha: '', lembrar: true });
+  const location = useLocation();
+  const [params] = useSearchParams();
+  const [form, setForm] = useState({ email: location.state?.email || '', senha: '' });
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [loading, setLoading] = useState(false);
   usePageTitle('Entrar');
+
+  const from = location.state?.from || '/';
+  const notice =
+    location.state?.message ||
+    (params.get('confirmado') ? 'E-mail confirmado. Agora é só entrar com sua senha.' : '');
+
+  if (authReady && isLogged && !loading) return <Navigate to={from} replace />;
 
   function update(field) {
     return (event) => {
-      const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-      setForm((current) => ({ ...current, [field]: value }));
+      setForm((current) => ({ ...current, [field]: event.target.value }));
+      setErrors((current) => ({ ...current, [field]: '' }));
     };
   }
 
-  function handleSubmit(event) {
+  function validate() {
+    const next = {};
+    if (!form.email.trim()) next.email = 'Informe seu e-mail.';
+    else if (!EMAIL_PATTERN.test(form.email.trim())) next.email = 'Digite um e-mail válido, como nome@exemplo.com.';
+    if (!form.senha) next.senha = 'Informe sua senha.';
+    return next;
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    login(form.lembrar);
-    showToast('Login realizado (demonstração). Bem-vinda, Ana Beatriz!');
-    navigate('/');
+    setSubmitError('');
+    const found = validate();
+    setErrors(found);
+    const firstInvalid = Object.keys(found)[0];
+    if (firstInvalid) {
+      document.getElementById(firstInvalid)?.focus();
+      return;
+    }
+    setLoading(true);
+    const { error } = await login(form.email.trim(), form.senha);
+    setLoading(false);
+    if (error) {
+      setSubmitError(error.message === 'not-configured' ? 'A autenticação ainda não foi configurada neste ambiente.' : authErrorMessage(error));
+      return;
+    }
+    showToast('Login realizado. Bem-vindo(a) de volta!');
+    navigate(from, { replace: true });
   }
 
   return (
@@ -39,7 +77,17 @@ export default function LoginPage() {
                     Iniciar Sessão
                   </h1>
 
-                  <form className="login-form" onSubmit={handleSubmit}>
+                  {!authConfigured && (
+                    <FormAlert type="error">
+                      A autenticação ainda não foi configurada neste ambiente (variáveis do Supabase ausentes).
+                    </FormAlert>
+                  )}
+                  {notice && <FormAlert type="success">{notice}</FormAlert>}
+                  {location.state?.from && !notice && (
+                    <FormAlert type="info">Entre na sua conta para acessar esta página.</FormAlert>
+                  )}
+
+                  <form className="login-form" onSubmit={handleSubmit} noValidate aria-busy={loading}>
                     <div className="form-group">
                       <label htmlFor="email" className="form-label">
                         E-mail
@@ -52,9 +100,16 @@ export default function LoginPage() {
                         placeholder="seuemail@iaragames.com"
                         autoComplete="email"
                         required
+                        aria-invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? 'email-erro' : undefined}
                         value={form.email}
                         onChange={update('email')}
                       />
+                      {errors.email && (
+                        <p className="field-error" id="email-erro">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
 
                     <div className="form-group">
@@ -68,40 +123,35 @@ export default function LoginPage() {
                         className="form-control"
                         autoComplete="current-password"
                         required
+                        aria-invalid={Boolean(errors.senha)}
+                        aria-describedby={errors.senha ? 'senha-erro' : undefined}
                         value={form.senha}
                         onChange={update('senha')}
                       />
+                      {errors.senha && (
+                        <p className="field-error" id="senha-erro">
+                          {errors.senha}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="login-form-row">
-                      <label className="checkbox-field form-check">
-                        <input
-                          type="checkbox"
-                          name="lembrar"
-                          className="form-check-input"
-                          checked={form.lembrar}
-                          onChange={update('lembrar')}
-                        />
-                        <span className="form-check-label">Lembrar-me</span>
-                      </label>
+                    <div className="login-form-row login-form-row--end">
                       <Link to="/em-construcao" className="form-link">
                         Esqueci a senha
                       </Link>
                     </div>
 
-                    <button type="submit" className="button button-secondary login-submit">
-                      <span>Entrar</span>
+                    {submitError && <FormAlert type="error">{submitError}</FormAlert>}
+
+                    <button type="submit" className="button button-secondary login-submit" disabled={loading || !authConfigured}>
+                      <span>{loading ? 'Entrando…' : 'Entrar'}</span>
                     </button>
                   </form>
-
-                  <p className="login-demo-note">
-                    Login demonstrativo: não há verificação de senha nem cadastro real.
-                  </p>
 
                   <div className="login-divider"></div>
 
                   <p className="login-register">
-                    Sua primeira vez aqui? <Link to="/em-construcao">Criar conta</Link>
+                    Sua primeira vez aqui? <Link to="/cadastro">Criar conta</Link>
                   </p>
                 </div>
               </div>

@@ -32,9 +32,13 @@ export default function UserMenu() {
     };
   }, [open]);
 
-  function handleLogout() {
+  async function handleLogout() {
     setOpen(false);
-    logout();
+    const { error } = await logout();
+    if (error) {
+      showToast('Não foi possível sair agora. Tente novamente.');
+      return;
+    }
     showToast('Você saiu da sua conta.');
     navigate('/');
   }

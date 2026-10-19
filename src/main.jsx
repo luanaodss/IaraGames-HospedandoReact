@@ -11,6 +11,7 @@ import './styles/home.css';
 import './styles/legacy.css';
 import './styles/catalog.css';
 import './styles/app.css';
+import './styles/auth.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
